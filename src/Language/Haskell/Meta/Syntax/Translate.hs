@@ -18,6 +18,7 @@ import Data.Typeable
 import Data.List (foldl', nub, (\\))
 import Language.Haskell.TH.Syntax
 import qualified Language.Haskell.Exts.Syntax as Hs
+import Data.Maybe
 
 -----------------------------------------------------------------------------
 
@@ -258,7 +259,7 @@ instance ToExp Hs.Exp where
 
 
 toMatch :: Hs.Alt -> Match
-toMatch (Hs.Alt _ p rhs ds) = Match (toPat p) (toBody rhs) (toDecs ds)
+toMatch (Hs.Alt _ p rhs ds) = Match (toPat p) (toBody rhs) (toDecs $ fromJust ds)
 
 toBody :: Hs.Rhs -> Body
 toBody (Hs.UnGuardedRhs e) = NormalB $ toExp e
@@ -445,7 +446,7 @@ instance ToDec Hs.Decl where
   toDec a@(Hs.FunBind mtchs)                           = hsMatchesToFunD mtchs
   toDec (Hs.PatBind _ p rhs bnds)                      = ValD (toPat p)
                                                               (hsRhsToBody rhs)
-                                                              (hsBindsToDecs bnds)
+                                                              (hsBindsToDecs $ fromJust bnds)
 
   toDec i@(Hs.InstDecl _ (Just overlap) _ _ _ _ _) =
     noTH "toDec" (overlap, i)
@@ -510,7 +511,7 @@ hsMatchToClause :: Hs.Match -> Clause
 hsMatchToClause (Hs.Match _ _ ps _ rhs bnds) = Clause
                                                 (fmap toPat ps)
                                                 (hsRhsToBody rhs)
-                                                (hsBindsToDecs bnds)
+                                                (hsBindsToDecs $ fromJust bnds)
 
 
 
